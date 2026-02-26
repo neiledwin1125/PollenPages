@@ -148,9 +148,8 @@ MIT
 ## 🙏 Acknowledgments
 
 - [Pollinations.ai](https://pollinations.ai) — Free AI generation API
-- [Vercel](https://vercel.com) — Fast Edge hosting
-- [Outfit & Playfair](https://fonts.google.com) — Beautiful typefaces
 
 ---
 
 **Made with ✦ for the Pollinations Community**
+
