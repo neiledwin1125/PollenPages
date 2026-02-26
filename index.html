@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PollenPages ✨ AI Storybooks</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body class="min-h-screen relative overflow-x-hidden selection:bg-yellow-500/30">
+
+  <div class="max-w-7xl mx-auto p-6 lg:p-10 relative z-10">
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+      <div class="flex items-center gap-4 group cursor-pointer hover:scale-105 transition-transform duration-500">
+        <div
+          class="relative w-12 h-12 flex items-center justify-center bg-yellow-400 rounded-xl shadow-[0_0_20px_rgba(250,204,21,0.5)]">
+          <i class="fa-solid fa-book-sparkles text-2xl text-zinc-900"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight banana-text-gradient uppercase tracking-wider">PollenPages
+          </h1>
+          <p class="text-zinc-400 text-sm font-medium tracking-wide">Powered by Pollinations.ai</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-end gap-2">
+        <button onclick="connectPollen()" id="connectBtn"
+          class="banana-btn px-6 py-2.5 rounded-full font-bold text-sm tracking-wide flex items-center gap-2">
+          <i class="fa-solid fa-plug text-zinc-800"></i> <span id="connectText">Connect API Key</span>
+        </button>
+        <div id="status" class="text-xs font-medium text-zinc-500 flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-zinc-600" id="statusDot"></div>
+          <span id="statusText">Waiting for connection...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- Generator Controls panel -->
+      <div class="lg:col-span-4 glass-panel rounded-[2rem] p-8 relative overflow-hidden group">
+        <!-- Decorative bloom -->
+        <div
+          class="absolute -top-24 -right-24 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/20 transition-all duration-700">
+        </div>
+
+        <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-yellow-300">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          Story Parameters
+        </h2>
+
+        <div class="space-y-5">
+          <!-- Basic Settings -->
+          <div>
+            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
+            <input id="title" type="text" placeholder="e.g. The Quantum Banana"
+              class="premium-input w-full rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Genre</label>
+            <div class="relative">
+              <select id="genre"
+                class="premium-input w-full rounded-xl px-4 py-3 text-sm text-zinc-100 appearance-none cursor-pointer">
+                <option value="Whimsical Fairy Tale">🧚‍♀️ Whimsical Fairy Tale</option>
+                <option value="Sci-Fi Adventure">🚀 Sci-Fi Adventure</option>
+                <option value="Cyberpunk Mystery">🌆 Cyberpunk Mystery</option>
+                <option value="Cozy Fantasy">☕ Cozy Fantasy</option>
+                <option value="Educational Childrens Book">📚 Educational</option>
+              </select>
+              <i
+                class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs"></i>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-end mb-1.5 ml-1">
+              <label class="block text-xs font-bold text-zinc-400 uppercase tracking-widest">Length</label>
+              <span id="pageCount" class="text-yellow-400 font-bold text-sm bg-yellow-400/10 px-2 py-0.5 rounded-md">5
+                Pages</span>
+            </div>
+            <input id="pages" type="range" min="3" max="10" value="5" class="w-full mt-2">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">The Core
+              Idea</label>
+            <textarea id="idea"
+              placeholder="A brave little protocol droid discovers the true meaning of artificial life while exploring an abandoned server farm..."
+              rows="4"
+              class="premium-input w-full rounded-xl px-4 py-3 text-sm text-zinc-100 resize-none leading-relaxed placeholder-zinc-600"></textarea>
+          </div>
+
+          <!-- Advanced Settings Toggle -->
+          <div class="border-t border-zinc-800 pt-5 mt-2">
+            <button onclick="toggleAdvancedSettings()"
+              class="w-full flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-widest hover:text-yellow-400 transition-colors">
+              <span><i class="fa-solid fa-sliders mr-2"></i> Advanced Settings</span>
+              <i class="fa-solid fa-chevron-down transition-transform" id="advancedIcon"></i>
+            </button>
+
+            <div id="advancedSettings" class="hidden mt-4 space-y-4">
+              <!-- Text Model -->
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Text
+                  Engine</label>
+                <div class="relative">
+                  <select id="textModel"
+                    class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
+                    <option value="openai">OpenAI (Recommended)</option>
+                    <option value="searchgpt">SearchGPT (Web Context)</option>
+                    <option value="mistral">Mistral (Fast)</option>
+                  </select>
+                  <i
+                    class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
+                </div>
+              </div>
+
+              <!-- Image Model -->
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Vision
+                  Engine</label>
+                <div class="relative">
+                  <select id="imageModel"
+                    class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
+                    <option value="flux">Flux (Creative)</option>
+                    <option value="flux-realism">Flux Realism (Photoreal)</option>
+                    <option value="turbo">Turbo (Fastest)</option>
+                  </select>
+                  <i
+                    class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
+                </div>
+              </div>
+
+              <!-- Dimensions -->
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Aspect
+                  Ratio</label>
+                <div class="relative">
+                  <select id="dimensions"
+                    class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
+                    <option value="1024x1024">Square (1x1)</option>
+                    <option value="768x1024">Standard (3x4)</option>
+                    <option value="1024x768">Landscape (4x3)</option>
+                  </select>
+                  <i
+                    class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="generateBook()" id="generateBtn"
+            class="banana-btn w-full mt-4 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 group/btn">
+            <i class="fa-solid fa-sparkles group-hover/btn:rotate-12 transition-transform"></i>
+            Generate Magic
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview / Viewer panel -->
+      <div class="lg:col-span-8">
+
+        <!-- Empty State -->
+        <div id="emptyState"
+          class="glass-panel rounded-[2rem] h-full min-h-[600px] flex flex-col items-center justify-center p-10 text-center border-dashed border-2 border-yellow-500/20">
+          <div
+            class="w-24 h-24 mb-6 rounded-3xl bg-zinc-800/50 flex items-center justify-center border border-yellow-500/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+            <i class="fa-solid fa-book-open text-4xl text-zinc-600"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-zinc-300 mb-2">The Canvas is Empty</h3>
+          <p class="text-zinc-500 max-w-md mx-auto">Configure your parameters on the left, click generate, and watch
+            Pollinations weave a beautiful storybook using advanced LLMs and Flux imagery.</p>
+        </div>
+
+        <!-- Generating State -->
+        <div id="loadingState"
+          class="hidden glass-panel rounded-[2rem] h-full min-h-[600px] flex flex-col items-center justify-center p-10">
+          <div class="loader mb-6 w-12 h-12 border-4"></div>
+          <h3 class="text-2xl font-bold text-yellow-400 mb-2 animate-pulse" id="loadingText">Summoning the Muse...</h3>
+          <p class="text-zinc-400 max-w-md mx-auto text-center" id="loadingSubtext">Crafting the narrative structure</p>
+
+          <!-- Progress Track -->
+          <div class="w-full max-w-md mt-8 bg-zinc-800 rounded-full h-2 overflow-hidden border border-zinc-700">
+            <div id="progressBar"
+              class="h-full bg-yellow-400 w-0 transition-all duration-300 shadow-[0_0_10px_rgba(250,204,21,0.8)]"></div>
+          </div>
+        </div>
+
+        <!-- Book Viewer -->
+        <div id="viewer" class="hidden w-full perspective-3000">
+          <div class="flex justify-between items-center mb-6">
+            <h2 id="bookTitleDisplay" class="text-2xl font-bold text-yellow-300 book-font italic"></h2>
+            <div class="flex gap-2">
+              <button onclick="downloadPDF()"
+                class="p-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-download"></i> Save
+              </button>
+            </div>
+          </div>
+
+          <div class="glass-panel rounded-[2rem] overflow-hidden shadow-2xl relative" style="min-height: 600px;">
+            <div id="pageContent" class="absolute inset-0 flex flex-col md:flex-row bg-[#121214]"></div>
+
+            <!-- Navigation overlays -->
+            <button onclick="prevPage()"
+              class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur border border-white/10 flex items-center justify-center transition-all z-20 text-white shadow-xl group">
+              <i class="fa-solid fa-chevron-left group-hover:-translate-x-1 transition-transform"></i>
+            </button>
+            <button onclick="nextPage()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur border border-white/10 flex items-center justify-center transition-all z-20 text-white shadow-xl group">
+              <i class="fa-solid fa-chevron-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+
+            <!-- Page indicator dots -->
+            <div id="pageDots"
+              class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 px-4 py-2 rounded-full bg-black/50 backdrop-blur border border-white/5">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>
