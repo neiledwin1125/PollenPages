@@ -8,6 +8,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 </head>
@@ -231,7 +232,7 @@
             <div class="flex gap-2">
               <button onclick="downloadZip()" id="saveBtn"
                 class="p-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-download"></i> Save Zip
+                <i class="fa-solid fa-file-zipper"></i> Save ZIP
               </button>
             </div>
           </div>
@@ -259,6 +260,14 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Fullscreen Image Overlay -->
+  <div id="fullscreenOverlay" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
+    <img id="fullscreenImage" src="" alt="Fullscreen" class="fullscreen-img">
+    <button onclick="closeFullscreen(event)" class="fullscreen-close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
   </div>
 
   <script src="js/app.js"></script>
