@@ -1,7 +1,6 @@
 let apiKey = null;
 let pages = [];
 let currentPageIndex = 0;
-let bookTitle = "";
 
 // LocalStorage with error boundary
 const Storage = {
@@ -154,33 +153,6 @@ function preloadImage(url) {
   });
 }
 
-// Title regeneration via openai-fast
-function regenerateTitle(originalTitle, genre, idea) {
-  return fetch('https://gen.pollinations.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + apiKey,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'openai-fast',
-      messages: [
-        { role: 'system', content: 'You are a creative book naming expert. Given a story title and its genre, generate a single improved, catchier, more evocative book title. Respond with ONLY the title text, no quotes, no explanation, no extra text.' },
-        { role: 'user', content: 'Original title: "' + originalTitle + '". Genre: ' + genre + '. Story idea: ' + idea + '. Suggest a better title.' }
-      ],
-      temperature: 0.9
-    })
-  }).then(function (res) {
-    if (!res.ok) return originalTitle;
-    return res.json().then(function (data) {
-      var t = data.choices[0].message.content.trim().replace(/^"|"$/g, '');
-      return (t && t.length > 0 && t.length < 100) ? t : originalTitle;
-    });
-  }).catch(function () {
-    return originalTitle;
-  });
-}
-
 // Main generation
 function generateBook() {
   if (!apiKey) {
@@ -218,20 +190,16 @@ function generateBook() {
     // Preload images one by one
     var loadNext = function (idx) {
       if (idx >= pages.length) {
-        // All images done, now regenerate title
-        updateProgress(95, 'Polishing the Title...', 'AI is crafting a better title');
-        return regenerateTitle(title, genre, idea).then(function (newTitle) {
-          bookTitle = newTitle;
-          updateProgress(100, 'Binding the Book...', 'Ready!');
-          setTimeout(function () {
-            document.getElementById('bookTitleDisplay').textContent = bookTitle;
-            currentPageIndex = 0;
-            renderBook();
-            switchView('viewer');
-            document.getElementById('generateBtn').disabled = false;
-            document.getElementById('generateBtn').classList.remove('opacity-50');
-          }, 800);
-        });
+        updateProgress(100, 'Binding the Book...', 'Ready!');
+        setTimeout(function () {
+          document.getElementById('bookTitleDisplay').textContent = title;
+          currentPageIndex = 0;
+          renderBook();
+          switchView('viewer');
+          document.getElementById('generateBtn').disabled = false;
+          document.getElementById('generateBtn').classList.remove('opacity-50');
+        }, 800);
+        return Promise.resolve();
       }
       var pct = Math.round(((idx / pages.length) * 80) + 15);
       var snippet = pages[idx].illustrationPrompt.substring(0, 40);
@@ -273,12 +241,7 @@ function renderBook() {
   container.innerHTML =
     '<div class="flex-1 border-b md:border-b-0 md:border-r border-zinc-800 relative bg-black flex items-center justify-center p-4">' +
     '<div class="absolute inset-0 bg-cover bg-center opacity-30 blur-xl" style="background-image: url(\'' + page.imageUrl + '\')"></div>' +
-    '<div class="relative z-10 w-full flex items-center justify-center">' +
-    '<img src="' + page.imageUrl + '" onerror="this.src=\'https://via.placeholder.com/1024?text=Image+Loading...\'" class="w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10 cursor-pointer" alt="Illustration" onclick="openFullscreen(' + idx + ')">' +
-    '<button onclick="openFullscreen(' + idx + ')" class="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-black/60 hover:bg-yellow-400 hover:text-zinc-900 backdrop-blur border border-white/20 flex items-center justify-center transition-all text-white text-sm shadow-lg" title="View Fullscreen">' +
-    '<i class="fa-solid fa-expand"></i>' +
-    '</button>' +
-    '</div>' +
+    '<img src="' + page.imageUrl + '" onerror="this.src=\'https://via.placeholder.com/1024?text=Image+Loading...\'" class="relative z-10 w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10" alt="Illustration">' +
     '</div>' +
     '<div class="flex-1 p-8 md:p-14 overflow-y-auto bg-[#18181b] relative">' +
     '<div class="absolute top-4 right-8 text-[8rem] font-bold text-zinc-800/20 pointer-events-none book-font">' + (idx + 1) + '</div>' +
@@ -302,118 +265,4 @@ function prevPage() {
 
 function jumpToPage(i) {
   if (i >= 0 && i < pages.length) { currentPageIndex = i; renderBook(); }
-}
-
-// ========== FULLSCREEN IMAGE VIEWER ==========
-function openFullscreen(pageIndex) {
-  var overlay = document.getElementById('fullscreenOverlay');
-  var img = document.getElementById('fullscreenImage');
-  if (pages[pageIndex]) {
-    img.src = pages[pageIndex].imageUrl;
-  }
-  overlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeFullscreen(e) {
-  var overlay = document.getElementById('fullscreenOverlay');
-  // Close if clicking overlay bg, close button, or its icon
-  if (!e || e.target === overlay || e.target.closest('.fullscreen-close')) {
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-}
-
-// Escape key closes fullscreen
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') {
-    var overlay = document.getElementById('fullscreenOverlay');
-    if (overlay && overlay.style.display === 'flex') {
-      overlay.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-  }
-});
-
-// ========== ZIP DOWNLOAD ==========
-function downloadZip() {
-  if (!pages || pages.length === 0) {
-    alert('No book to save yet! Generate a story first.');
-    return;
-  }
-
-  var saveBtn = document.getElementById('saveBtn');
-  if (!saveBtn) return;
-
-  // Check if JSZip is available
-  if (typeof JSZip === 'undefined') {
-    alert('ZIP library is still loading. Please wait a moment and try again.');
-    return;
-  }
-
-  var originalHTML = saveBtn.innerHTML;
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Packing...';
-
-  var zip = new JSZip();
-  var folderName = (bookTitle || 'PollenPages-Story').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_') || 'Story';
-  var folder = zip.folder(folderName);
-
-  // Add all text files first
-  for (var i = 0; i < pages.length; i++) {
-    var pg = pages[i];
-    var num = i + 1;
-    var txt = 'Page ' + num + '\n========================================\n\n' + pg.text + '\n\n---\nIllustration Prompt: ' + pg.illustrationPrompt;
-    folder.file('page' + num + '.txt', txt);
-  }
-
-  // Add readme
-  folder.file('README.txt', bookTitle + '\nGenerated by PollenPages (pollinations.ai)\nTotal pages: ' + pages.length + '\n');
-
-  // Try to fetch images and add them
-  var imagePromises = [];
-  for (var j = 0; j < pages.length; j++) {
-    (function (index) {
-      var pageNum = index + 1;
-      var p = fetch(pages[index].imageUrl, { mode: 'cors' })
-        .then(function (res) {
-          if (res.ok) return res.blob();
-          return null;
-        })
-        .then(function (blob) {
-          if (blob) {
-            folder.file('page' + pageNum + '.png', blob);
-          }
-        })
-        .catch(function (err) {
-          console.warn('Image fetch failed for page ' + pageNum, err);
-        });
-      imagePromises.push(p);
-    })(j);
-  }
-
-  Promise.all(imagePromises).then(function () {
-    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Zipping...';
-    return zip.generateAsync({ type: 'blob' });
-  }).then(function (content) {
-    // Use FileSaver if available, otherwise manual download
-    if (typeof saveAs !== 'undefined') {
-      saveAs(content, folderName + '.zip');
-    } else {
-      var url = URL.createObjectURL(content);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = folderName + '.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  }).catch(function (err) {
-    console.error('ZIP failed:', err);
-    alert('Failed to create ZIP. Please try again.');
-  }).finally(function () {
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = originalHTML;
-  });
 }
