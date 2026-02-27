@@ -74,6 +74,8 @@
                 <option value="Cyberpunk Mystery">🌆 Cyberpunk Mystery</option>
                 <option value="Cozy Fantasy">☕ Cozy Fantasy</option>
                 <option value="Educational Childrens Book">📚 Educational</option>
+                <option value="JavaScript Tutorial">🟨 JavaScript Tutorial</option>
+                <option value="CSS Styling Guide">🎨 CSS Styling Guide</option>
               </select>
               <i
                 class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs"></i>
@@ -114,9 +116,11 @@
                 <div class="relative">
                   <select id="textModel"
                     class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
-                    <option value="openai">OpenAI (Recommended)</option>
-                    <option value="searchgpt">SearchGPT (Web Context)</option>
-                    <option value="mistral">Mistral (Fast)</option>
+                    <option value="openai-fast">OpenAI Fast (Default)</option>
+                    <option value="gemini-search">Gemini Search</option>
+                    <option value="mistral">Mistral</option>
+                    <option value="nova-fast">Nova Fast</option>
+                    <option value="gemini-fast">Gemini Fast</option>
                   </select>
                   <i
                     class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
@@ -130,9 +134,13 @@
                 <div class="relative">
                   <select id="imageModel"
                     class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
-                    <option value="flux">Flux (Creative)</option>
-                    <option value="flux-realism">Flux Realism (Photoreal)</option>
-                    <option value="turbo">Turbo (Fastest)</option>
+                    <option value="zimage">Z-Image Turbo (Default)</option>
+                    <option value="flux">Flux Schnell</option>
+                    <option value="imagen-4">Imagen 4</option>
+                    <option value="grok-imagine">Grok Imagine</option>
+                    <option value="klein">FLUX.2 Klein 4B</option>
+                    <option value="klein-large">FLUX.2 Klein 9B</option>
+                    <option value="gptimage">GPT Image 1 Mini</option>
                   </select>
                   <i
                     class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
@@ -149,6 +157,27 @@
                     <option value="1024x1024">Square (1x1)</option>
                     <option value="768x1024">Standard (3x4)</option>
                     <option value="1024x768">Landscape (4x3)</option>
+                  </select>
+                  <i
+                    class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
+                </div>
+              </div>
+
+              <!-- Image Style -->
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Art
+                  Style</label>
+                <div class="relative">
+                  <select id="imageStyle"
+                    class="premium-input w-full rounded-lg px-3 py-2 text-xs text-zinc-300 appearance-none cursor-pointer">
+                    <option value="">Auto / Magic</option>
+                    <option value="comic-book">Comic Book</option>
+                    <option value="anime">Anime / Manga</option>
+                    <option value="photorealistic">Photorealistic</option>
+                    <option value="watercolor">Watercolor</option>
+                    <option value="3d-model">3D Render</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="pixel-art">Pixel Art</option>
                   </select>
                   <i
                     class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
