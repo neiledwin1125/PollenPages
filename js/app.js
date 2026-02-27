@@ -1,6 +1,7 @@
 let apiKey = null;
 let pages = [];
 let currentPageIndex = 0;
+let bookTitle = "";
 
 // LocalStorage with error boundary
 const Storage = {
@@ -162,7 +163,7 @@ async function generateBook() {
 
   try {
     const systemPrompt = `You are a master storyteller writing a ${genre} storybook for a premium app.
-    Respond ONLY with a JSON object containing a "title" string (a catchy, improved version of the user's title) and a "pages" array.
+    Respond ONLY with a JSON object containing a "pages" array.
     Each page object must have: "pageNumber" (1 to ${numPages}), "text" (2-3 engaging paragraphs), and "illustrationPrompt" (detailed comma-separated visual description of the scene for an AI image generator, focus on subject, environment, lighting, and style).`;
 
     const userPrompt = `Title: "${title}". Core Idea: ${idea}. Total exact pages: ${numPages}. Write the complete storybook.`;
@@ -189,8 +190,42 @@ async function generateBook() {
 
     updateProgress(100, "Binding the Book...", "Ready!");
 
+    // Regenerate title with openai-fast
+    updateProgress(100, "Polishing the Title...", "AI is crafting a better title");
+    try {
+      const titleRes = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'openai-fast',
+          messages: [
+            { role: 'system', content: 'You are a creative book naming expert. Given a story title and its genre, generate a single improved, catchier, more evocative book title. Respond with ONLY the title text, no quotes, no explanation.' },
+            { role: 'user', content: `Original title: "${title}". Genre: ${genre}. Story idea: ${idea}. Suggest a better title.` }
+          ],
+          temperature: 0.9
+        })
+      });
+      if (titleRes.ok) {
+        const titleData = await titleRes.json();
+        const newTitle = titleData.choices[0].message.content.trim().replace(/^"|"$/g, '');
+        if (newTitle && newTitle.length > 0 && newTitle.length < 100) {
+          bookTitle = newTitle;
+        } else {
+          bookTitle = title;
+        }
+      } else {
+        bookTitle = title;
+      }
+    } catch (e) {
+      console.warn('Title regeneration failed, using original', e);
+      bookTitle = title;
+    }
+
     setTimeout(() => {
-      document.getElementById('bookTitleDisplay').textContent = storyData.title || title;
+      document.getElementById('bookTitleDisplay').textContent = bookTitle;
       currentPageIndex = 0;
       renderBook();
       switchView('viewer');
@@ -223,10 +258,12 @@ function renderBook() {
   const html = `
     <div class="flex-1 border-b md:border-b-0 md:border-r border-zinc-800 relative bg-black flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-cover bg-center opacity-30 blur-xl" style="background-image: url('${page.imageUrl}')"></div>
-      <img id="currentImage" src="${page.imageUrl}" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="relative z-10 w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10" alt="Illustration">
-      <button onclick="document.getElementById('currentImage').requestFullscreen()" class="absolute bottom-6 right-6 z-20 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white backdrop-blur border border-white/20 transition-all shadow-xl hover:scale-110" title="View Fullscreen">
-        <i class="fa-solid fa-expand"></i>
-      </button>
+      <div class="relative z-10 w-full flex items-center justify-center">
+        <img src="${page.imageUrl}" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10 cursor-pointer" alt="Illustration" onclick="openFullscreen('${page.imageUrl}')">
+        <button onclick="openFullscreen('${page.imageUrl}')" class="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-black/60 hover:bg-yellow-400 hover:text-zinc-900 backdrop-blur border border-white/20 flex items-center justify-center transition-all text-white text-sm shadow-lg" title="View Fullscreen">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+      </div>
     </div>
     <div class="flex-1 p-8 md:p-14 overflow-y-auto bg-[#18181b] relative">
       <div class="absolute top-4 right-8 text-[8rem] font-bold text-zinc-800/20 pointer-events-none book-font">${currentPageIndex + 1}</div>
@@ -265,49 +302,74 @@ function jumpToPage(i) {
   }
 }
 
-function downloadZip() {
-  const btn = document.getElementById('saveBtn');
-  if (!btn) return;
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Zipping...';
-  btn.classList.add('opacity-50', 'cursor-not-allowed');
-  btn.disabled = true;
+// Fullscreen Image Viewer
+function openFullscreen(imageUrl) {
+  const overlay = document.getElementById('fullscreenOverlay');
+  const img = document.getElementById('fullscreenImage');
+  img.src = imageUrl;
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreen(event) {
+  // Only close if clicking overlay background or the close button, not the image itself
+  if (event.target.id === 'fullscreenOverlay' || event.target.closest('.fullscreen-close')) {
+    const overlay = document.getElementById('fullscreenOverlay');
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+}
+
+// ZIP Download
+async function downloadZip() {
+  if (!pages || pages.length === 0) {
+    alert('No book to save yet! Generate a story first.');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  const originalHTML = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Packing...';
 
   try {
     const zip = new JSZip();
-    const folderName = document.getElementById('bookTitleDisplay').textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'storybook';
+    const folderName = (bookTitle || 'PollenPages-Story').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
     const folder = zip.folder(folderName);
 
-    const promises = pages.map(async (p, i) => {
-      const res = await fetch(p.imageUrl);
-      const blob = await res.blob();
-      folder.file(`page${i + 1}.png`, blob);
-      folder.file(`page${i + 1}.txt`, p.text);
-    });
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const pageNum = i + 1;
 
-    Promise.all(promises).then(() => {
-      zip.generateAsync({ type: "blob" }).then((content) => {
-        const url = URL.createObjectURL(content);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${folderName}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 100);
-      }).finally(() => {
-        btn.innerHTML = originalHtml;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        btn.disabled = false;
-      });
-    });
+      // Save text
+      const textContent = `Page ${pageNum}\n${'='.repeat(40)}\n\n${page.text}\n\n---\nIllustration Prompt: ${page.illustrationPrompt}`;
+      folder.file(`page${pageNum}.txt`, textContent);
+
+      // Fetch and save image
+      try {
+        const response = await fetch(page.imageUrl);
+        if (response.ok) {
+          const blob = await response.blob();
+          folder.file(`page${pageNum}.png`, blob);
+        }
+      } catch (imgErr) {
+        console.warn(`Could not fetch image for page ${pageNum}`, imgErr);
+      }
+
+      saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${pageNum}/${pages.length}`;
+    }
+
+    // Add a readme
+    folder.file('README.txt', `${bookTitle}\nGenerated by PollenPages (pollinations.ai)\nTotal pages: ${pages.length}\n`);
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `${folderName}.zip`);
+
   } catch (err) {
-    console.error(err);
-    alert("Failed to create zip file: " + err.message);
-    btn.innerHTML = originalHtml;
-    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-    btn.disabled = false;
+    console.error('ZIP generation failed:', err);
+    alert('Failed to create ZIP. Please try again.');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalHTML;
   }
 }
