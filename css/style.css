@@ -83,7 +83,6 @@ body {
   font-family: 'Playfair Display', serif;
 }
 
-/* Input styling */
 .premium-input {
   background: rgba(39, 39, 42, 0.5);
   border: 1px solid rgba(250, 204, 21, 0.2);
@@ -97,7 +96,6 @@ body {
   background: rgba(39, 39, 42, 0.8);
 }
 
-/* Page transitions */
 .page-turn-enter {
   animation: pageFlipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -130,7 +128,6 @@ body {
   }
 }
 
-/* Loading Spinner */
 .loader {
   border: 3px solid rgba(250, 204, 21, 0.1);
   border-left-color: #facc15;
@@ -150,7 +147,6 @@ body {
   }
 }
 
-/* Custom range slider */
 input[type=range] {
   -webkit-appearance: none;
   appearance: none;
@@ -177,7 +173,6 @@ input[type=range]::-webkit-slider-runnable-track {
   border-radius: 2px;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -193,4 +188,66 @@ input[type=range]::-webkit-slider-runnable-track {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(250, 204, 21, 0.5);
+}
+
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.25s ease;
+  cursor: zoom-out;
+}
+
+.fullscreen-overlay.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fullscreen-img-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 15;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s, transform 0.2s;
+  font-size: 14px;
+}
+
+.img-container:hover .fullscreen-img-btn {
+  opacity: 1;
+}
+
+.fullscreen-img-btn:hover {
+  background: rgba(250, 204, 21, 0.6);
+  transform: scale(1.1);
+}
+
+.save-loading {
+  pointer-events: none;
+  opacity: 0.6;
 }
