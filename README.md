@@ -14,7 +14,6 @@
 | 📖 **Dynamic Page Flips** | Immersive 3D CSS page transitions for a real book-reading experience |
 | 🎛️ **Advanced Settings** | Control Aspect Ratios, Text Engines, and Vision Engines directly from the UI |
 | 🔑 **Optional API Key** | Bring your own Pollinations API key to unlock premium speed and limits |
-| 🎨 **Premium Aesthetic** | "Nano Banana" dark glassmorphism design system |
 | 📱 **Fully Responsive** | Works beautifully on desktop, tablet, and mobile |
 | ⏳ **Live Progress Tracking** | Real-time loading indicator tracking the AI's exact progress |
 
@@ -152,4 +151,5 @@ MIT
 ---
 
 **Made with ✦ for the Pollinations Community**
+
 
