@@ -162,7 +162,7 @@ async function generateBook() {
 
   try {
     const systemPrompt = `You are a master storyteller writing a ${genre} storybook for a premium app.
-    Respond ONLY with a JSON object containing a "pages" array.
+    Respond ONLY with a JSON object containing a "title" string (a catchy, improved version of the user's title) and a "pages" array.
     Each page object must have: "pageNumber" (1 to ${numPages}), "text" (2-3 engaging paragraphs), and "illustrationPrompt" (detailed comma-separated visual description of the scene for an AI image generator, focus on subject, environment, lighting, and style).`;
 
     const userPrompt = `Title: "${title}". Core Idea: ${idea}. Total exact pages: ${numPages}. Write the complete storybook.`;
@@ -190,7 +190,7 @@ async function generateBook() {
     updateProgress(100, "Binding the Book...", "Ready!");
 
     setTimeout(() => {
-      document.getElementById('bookTitleDisplay').textContent = title;
+      document.getElementById('bookTitleDisplay').textContent = storyData.title || title;
       currentPageIndex = 0;
       renderBook();
       switchView('viewer');
@@ -223,7 +223,10 @@ function renderBook() {
   const html = `
     <div class="flex-1 border-b md:border-b-0 md:border-r border-zinc-800 relative bg-black flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-cover bg-center opacity-30 blur-xl" style="background-image: url('${page.imageUrl}')"></div>
-      <img src="${page.imageUrl}" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="relative z-10 w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10" alt="Illustration">
+      <img id="currentImage" src="${page.imageUrl}" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="relative z-10 w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10" alt="Illustration">
+      <button onclick="document.getElementById('currentImage').requestFullscreen()" class="absolute bottom-6 right-6 z-20 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white backdrop-blur border border-white/20 transition-all shadow-xl hover:scale-110" title="View Fullscreen">
+        <i class="fa-solid fa-expand"></i>
+      </button>
     </div>
     <div class="flex-1 p-8 md:p-14 overflow-y-auto bg-[#18181b] relative">
       <div class="absolute top-4 right-8 text-[8rem] font-bold text-zinc-800/20 pointer-events-none book-font">${currentPageIndex + 1}</div>
@@ -262,6 +265,49 @@ function jumpToPage(i) {
   }
 }
 
-function downloadPDF() {
-  alert("Save feature is simulated. Wait for an app update or print this page!");
+function downloadZip() {
+  const btn = document.getElementById('saveBtn');
+  if (!btn) return;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Zipping...';
+  btn.classList.add('opacity-50', 'cursor-not-allowed');
+  btn.disabled = true;
+
+  try {
+    const zip = new JSZip();
+    const folderName = document.getElementById('bookTitleDisplay').textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'storybook';
+    const folder = zip.folder(folderName);
+
+    const promises = pages.map(async (p, i) => {
+      const res = await fetch(p.imageUrl);
+      const blob = await res.blob();
+      folder.file(`page${i + 1}.png`, blob);
+      folder.file(`page${i + 1}.txt`, p.text);
+    });
+
+    Promise.all(promises).then(() => {
+      zip.generateAsync({ type: "blob" }).then((content) => {
+        const url = URL.createObjectURL(content);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${folderName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }).finally(() => {
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.disabled = false;
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Failed to create zip file: " + err.message);
+    btn.innerHTML = originalHtml;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    btn.disabled = false;
+  }
 }
