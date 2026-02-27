@@ -182,6 +182,7 @@ async function generateBook() {
 
       await new Promise((resolve) => {
         const img = new Image();
+        img.crossOrigin = 'anonymous';
         img.onload = resolve;
         img.onerror = resolve;
         img.src = pages[i].imageUrl;
@@ -255,12 +256,13 @@ function renderBook() {
   ).join('');
   document.getElementById('pageDots').innerHTML = dotsHTML;
 
+  const pageIdx = currentPageIndex;
   const html = `
     <div class="flex-1 border-b md:border-b-0 md:border-r border-zinc-800 relative bg-black flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-cover bg-center opacity-30 blur-xl" style="background-image: url('${page.imageUrl}')"></div>
       <div class="relative z-10 w-full flex items-center justify-center">
-        <img src="${page.imageUrl}" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10 cursor-pointer" alt="Illustration" onclick="openFullscreen('${page.imageUrl}')">
-        <button onclick="openFullscreen('${page.imageUrl}')" class="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-black/60 hover:bg-yellow-400 hover:text-zinc-900 backdrop-blur border border-white/20 flex items-center justify-center transition-all text-white text-sm shadow-lg" title="View Fullscreen">
+        <img id="pageImg_${pageIdx}" src="${page.imageUrl}" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/1024?text=Image+Generating...'" class="w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10 cursor-pointer" alt="Illustration" onclick="openFullscreen(${pageIdx})">
+        <button onclick="openFullscreen(${pageIdx})" class="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-black/60 hover:bg-yellow-400 hover:text-zinc-900 backdrop-blur border border-white/20 flex items-center justify-center transition-all text-white text-sm shadow-lg" title="View Fullscreen">
           <i class="fa-solid fa-expand"></i>
         </button>
       </div>
@@ -303,21 +305,73 @@ function jumpToPage(i) {
 }
 
 // Fullscreen Image Viewer
-function openFullscreen(imageUrl) {
+function openFullscreen(pageIndex) {
   const overlay = document.getElementById('fullscreenOverlay');
   const img = document.getElementById('fullscreenImage');
-  img.src = imageUrl;
+  if (pages[pageIndex]) {
+    img.src = pages[pageIndex].imageUrl;
+  }
   overlay.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
 function closeFullscreen(event) {
-  // Only close if clicking overlay background or the close button, not the image itself
-  if (event.target.id === 'fullscreenOverlay' || event.target.closest('.fullscreen-close')) {
+  if (!event || event.target.id === 'fullscreenOverlay' || event.target.closest('.fullscreen-close')) {
     const overlay = document.getElementById('fullscreenOverlay');
     overlay.classList.add('hidden');
     document.body.style.overflow = '';
   }
+}
+
+// Close fullscreen with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('fullscreenOverlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  }
+});
+
+// Helper: Convert an image element to a PNG blob via canvas
+function imageElementToBlob(imgElement) {
+  return new Promise((resolve) => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = imgElement.naturalWidth || imgElement.width || 1024;
+      canvas.height = imgElement.naturalHeight || imgElement.height || 1024;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgElement, 0, 0);
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/png');
+    } catch (e) {
+      console.warn('Canvas export failed (CORS):', e);
+      resolve(null);
+    }
+  });
+}
+
+// Helper: Load an image fresh with crossOrigin and convert to blob
+function loadImageAsBlob(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        canvas.toBlob((blob) => resolve(blob), 'image/png');
+      } catch (e) {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  });
 }
 
 // ZIP Download
@@ -334,7 +388,7 @@ async function downloadZip() {
 
   try {
     const zip = new JSZip();
-    const folderName = (bookTitle || 'PollenPages-Story').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const folderName = (bookTitle || 'PollenPages-Story').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_') || 'Story';
     const folder = zip.folder(folderName);
 
     for (let i = 0; i < pages.length; i++) {
@@ -345,15 +399,36 @@ async function downloadZip() {
       const textContent = `Page ${pageNum}\n${'='.repeat(40)}\n\n${page.text}\n\n---\nIllustration Prompt: ${page.illustrationPrompt}`;
       folder.file(`page${pageNum}.txt`, textContent);
 
-      // Fetch and save image
-      try {
-        const response = await fetch(page.imageUrl);
-        if (response.ok) {
-          const blob = await response.blob();
-          folder.file(`page${pageNum}.png`, blob);
+      // Try to capture the image from the currently rendered page img if visible
+      let blob = null;
+
+      // Method 1: Try to get from the DOM (only if this page is currently rendered)
+      const domImg = document.getElementById(`pageImg_${i}`);
+      if (domImg && domImg.complete && domImg.naturalWidth > 0) {
+        blob = await imageElementToBlob(domImg);
+      }
+
+      // Method 2: Load fresh with crossOrigin
+      if (!blob) {
+        blob = await loadImageAsBlob(page.imageUrl);
+      }
+
+      // Method 3: Direct fetch as last resort
+      if (!blob) {
+        try {
+          const response = await fetch(page.imageUrl, { mode: 'cors' });
+          if (response.ok) {
+            blob = await response.blob();
+          }
+        } catch (fetchErr) {
+          console.warn(`Fetch fallback failed for page ${pageNum}:`, fetchErr);
         }
-      } catch (imgErr) {
-        console.warn(`Could not fetch image for page ${pageNum}`, imgErr);
+      }
+
+      if (blob) {
+        folder.file(`page${pageNum}.png`, blob);
+      } else {
+        console.warn(`Could not capture image for page ${pageNum}`);
       }
 
       saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${pageNum}/${pages.length}`;
