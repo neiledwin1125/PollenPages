@@ -12,7 +12,7 @@
 | 🎭 **5 Genre Presets** | Whimsical Fairy Tale, Sci-Fi Adventure, Cyberpunk Mystery, Cozy Fantasy, Educational |
 | ⚡ **Automated Generation** | Generate entire storybooks with parallel text and image processing |
 | 📖 **Dynamic Page Flips** | Immersive 3D CSS page transitions for a real book-reading experience |
-| 🎛️ **Advanced Settings** | Control Aspect Ratios, Text Engines, and Vision Engines directly from the UI |
+| 🎛️ **Advanced Settings** | Control Aspect Ratios, Art Styles, Text Engines, and Vision Engines directly from the UI |
 | 🔑 **Optional API Key** | Bring your own Pollinations API key to unlock premium speed and limits |
 | 📱 **Fully Responsive** | Works beautifully on desktop, tablet, and mobile |
 | ⏳ **Live Progress Tracking** | Real-time loading indicator tracking the AI's exact progress |
@@ -44,7 +44,7 @@ npx serve .
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │   User Input    │────▶│ Pollinations API │────▶│  Text Engine    │
-│  (HTML/CSS/JS)  │     │ (gen.pollinations)     │ (OpenAI/Mistral)│
+│  (HTML/CSS/JS)  │     │ (gen.pollinations)     │ (openai-fast)   │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
                               │                           │
                               ▼                           ▼
@@ -55,8 +55,8 @@ npx serve .
                               │                           │
                               ▼                           ▼
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│ Dynamic UI View │     │ 1024x1024 Flux   │     │ Immersive Book  │
-│ (3D Page Flips) │     │ Images (No Logo) │     │ Reading UX      │
+│ Dynamic UI View │     │ Styled Images    │     │ Immersive Book  │
+│ (3D Page Flips) │     │ (Z-Image Turbo)  │     │ Reading UX      │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
@@ -64,11 +64,10 @@ npx serve .
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES6+) |
+| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES5 Compatible) |
 | **Styling** | Custom CSS Variables, TailwindCSS (CDN) for layout |
 | **AI Provider** | [Pollinations.ai](https://pollinations.ai) — Generative Media API |
-| **Logic** | Custom async promise management and JSON parsing |
-| **Models** | Flux, Flux Realism, GPT-4o, SearchGPT |
+| **Logic** | Custom async promise management and JSON parsing (No Dependencies) |
 | **Fonts** | Outfit, Playfair Display (Google Fonts) |
 
 ## 🧠 Advanced Generation System
@@ -78,8 +77,8 @@ PollenPages utilizes a highly robust generation pipeline to ensure your stories 
 **How it works:**
 1. User inputs parameters and PollenPages constructs an advanced system prompt.
 2. The payload is sent to the Pollinations `/v1/chat/completions` endpoint enforcing JSON output.
-3. Our custom `parseLLMJson()` function sanitizes the response, stripping rogue markdown blocks.
-4. The system concurrently triggers Pollinations image endpoints, injecting modifiers like `masterpiece, high quality` and `nologo=true`.
+3. Our custom `parseLLMJson()` function sanitizes the response.
+4. The system concurrently triggers Pollinations image endpoints, injecting specific Art Style modifiers.
 5. Images are pre-loaded blindly to prevent UI layout shifts before rendering.
 
 **UI cues:**
@@ -92,18 +91,11 @@ Each genre automatically contextualizes the LLM's system prompt:
 
 | Setting | Options |
 |-------|--------------|
-| **Text Engine** | OpenAI (Recommended), SearchGPT, Mistral |
-| **Vision Engine** | Flux (Creative), Flux Realism, Turbo |
+| **Text Engine** | OpenAI Fast (Default), Gemini Search, Mistral, Nova Fast, Gemini Fast |
+| **Vision Engine** | Z-Image Turbo (Default), Flux Schnell, Imagen 4, Grok Imagine, FLUX.2 Klein 4B/9B, GPT Image 1 Mini |
 | **Aspect Ratio** | Square (1x1), Standard (3x4), Landscape (4x3) |
+| **Art Style** | Auto/Magic, Comic Book, Anime/Manga, Photorealistic, Watercolor, 3D Render, Cyberpunk, Pixel Art |
 | **Length** | 3 to 10 Pages |
-
-## 🤖 AI Models
-
-| Model | Best For | Speed | Quality |
-|-------|----------|-------|---------|
-| **OpenAI + Flux** | Standard storybooks | ⚡ Fast | ⭐⭐⭐⭐⭐ Best |
-| **Mistral + Turbo** | Rapid prototyping | ⚡⚡ Very Fast | ⭐⭐⭐ Good |
-| **SearchGPT + Realism** | Photorealistic educational books | 🐢 Slower | ⭐⭐⭐⭐ Better |
 
 ## 📂 Project Structure
 
@@ -111,7 +103,7 @@ Each genre automatically contextualizes the LLM's system prompt:
 pollenpages/
 ├── index.html          # Main UI — Hero, generator, viewer
 ├── css/
-│   └── style.css       # Complete design system — dark theme, glassmorphism
+│   └── style.css       # Complete design system
 ├── js/
 │   └── app.js          # Application logic — API routing, state management
 ├── package.json        # Project metadata + dev server scripts
@@ -129,16 +121,16 @@ Users can configure app globally:
 ## 🔌 API Integration
 
 ### `POST /v1/chat/completions`
-Generates the core JSON narrative structure.
+Generates the core JSON narrative structure. 
 
 ### `GET /image/[prompt]`
 Generates the accompanying illustrations using advanced query parameters:
 `?model={engine}&width={w}&height={h}&nologo=true&enhance=true`
 
-## �️ Security
+## 🛡️ Security
 
 - **Client-Side Only** — API keys remain locally on the client and are passed directly to endpoints.
-- **JSON Sanitization** — Prevents interface breaks from malformed LLM responses.
+- **Dependency-Free Logic** — The core `app.js` functionality does not rely on any third-party libraries.
 
 ## 📝 License
 
@@ -151,5 +143,3 @@ MIT
 ---
 
 **Made with ✦ for the Pollinations Community**
-
-
