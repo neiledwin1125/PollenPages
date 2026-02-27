@@ -76,8 +76,6 @@
                 <option value="Cyberpunk Mystery">🌆 Cyberpunk Mystery</option>
                 <option value="Cozy Fantasy">☕ Cozy Fantasy</option>
                 <option value="Educational Childrens Book">📚 Educational</option>
-                <option value="JavaScript Tutorial">🟨 JavaScript Tutorial</option>
-                <option value="CSS Styling Guide">🎨 CSS Styling Guide</option>
               </select>
               <i
                 class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs"></i>
@@ -263,7 +261,7 @@
   </div>
 
   <!-- Fullscreen Image Overlay -->
-  <div id="fullscreenOverlay" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
+  <div id="fullscreenOverlay" class="fullscreen-overlay" style="display:none" onclick="closeFullscreen(event)">
     <img id="fullscreenImage" src="" alt="Fullscreen" class="fullscreen-img">
     <button onclick="closeFullscreen(event)" class="fullscreen-close">
       <i class="fa-solid fa-xmark"></i>
