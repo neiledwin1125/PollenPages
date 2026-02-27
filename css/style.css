@@ -210,10 +210,6 @@ input[type=range]::-webkit-slider-runnable-track {
   animation: fadeIn 0.25s ease;
 }
 
-.fullscreen-overlay.hidden {
-  display: none;
-}
-
 .fullscreen-img {
   max-width: 95vw;
   max-height: 95vh;
