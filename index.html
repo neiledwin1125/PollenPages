@@ -7,6 +7,8 @@
   <title>PollenPages ✨ AI Storybooks</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 </head>
@@ -15,7 +17,6 @@
 
   <div class="max-w-7xl mx-auto p-6 lg:p-10 relative z-10">
 
-    <!-- Header -->
     <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
       <div class="flex items-center gap-4 group cursor-pointer hover:scale-105 transition-transform duration-500">
         <div
@@ -41,12 +42,9 @@
       </div>
     </header>
 
-    <!-- Main Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-      <!-- Generator Controls panel -->
       <div class="lg:col-span-4 glass-panel rounded-[2rem] p-8 relative overflow-hidden group">
-        <!-- Decorative bloom -->
         <div
           class="absolute -top-24 -right-24 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/20 transition-all duration-700">
         </div>
@@ -57,7 +55,6 @@
         </h2>
 
         <div class="space-y-5">
-          <!-- Basic Settings -->
           <div>
             <label class="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
             <input id="title" type="text" placeholder="e.g. The Quantum Banana"
@@ -74,6 +71,8 @@
                 <option value="Cyberpunk Mystery">🌆 Cyberpunk Mystery</option>
                 <option value="Cozy Fantasy">☕ Cozy Fantasy</option>
                 <option value="Educational Childrens Book">📚 Educational</option>
+                <option value="Epic Fantasy">� Epic Fantasy</option>
+                <option value="Mystery Thriller">🕵️ Mystery Thriller</option>
               </select>
               <i
                 class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs"></i>
@@ -98,7 +97,6 @@
               class="premium-input w-full rounded-xl px-4 py-3 text-sm text-zinc-100 resize-none leading-relaxed placeholder-zinc-600"></textarea>
           </div>
 
-          <!-- Advanced Settings Toggle -->
           <div class="border-t border-zinc-800 pt-5 mt-2">
             <button onclick="toggleAdvancedSettings()"
               class="w-full flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-widest hover:text-yellow-400 transition-colors">
@@ -107,7 +105,6 @@
             </button>
 
             <div id="advancedSettings" class="hidden mt-4 space-y-4">
-              <!-- Text Model -->
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Text
                   Engine</label>
@@ -125,7 +122,6 @@
                 </div>
               </div>
 
-              <!-- Image Model -->
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Vision
                   Engine</label>
@@ -145,7 +141,6 @@
                 </div>
               </div>
 
-              <!-- Dimensions -->
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Aspect
                   Ratio</label>
@@ -155,13 +150,15 @@
                     <option value="1024x1024">Square (1x1)</option>
                     <option value="768x1024">Standard (3x4)</option>
                     <option value="1024x768">Landscape (4x3)</option>
+                    <option value="683x1024">Portrait (2:3)</option>
+                    <option value="819x1024">Portrait (4:5)</option>
+                    <option value="1080x1920">Story (9:16)</option>
                   </select>
                   <i
                     class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none text-[10px]"></i>
                 </div>
               </div>
 
-              <!-- Image Style -->
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Art
                   Style</label>
@@ -192,45 +189,67 @@
         </div>
       </div>
 
-      <!-- Preview / Viewer panel -->
       <div class="lg:col-span-8">
 
-        <!-- Empty State -->
         <div id="emptyState"
-          class="glass-panel rounded-[2rem] h-full min-h-[600px] flex flex-col items-center justify-center p-10 text-center border-dashed border-2 border-yellow-500/20">
+          class="glass-panel rounded-[2rem] h-full min-h-[600px] flex flex-col items-center justify-center p-10 text-center border-dashed border-2 border-yellow-500/20 relative overflow-hidden">
           <div
             class="w-24 h-24 mb-6 rounded-3xl bg-zinc-800/50 flex items-center justify-center border border-yellow-500/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
             <i class="fa-solid fa-book-open text-4xl text-zinc-600"></i>
           </div>
           <h3 class="text-2xl font-bold text-zinc-300 mb-2">The Canvas is Empty</h3>
-          <p class="text-zinc-500 max-w-md mx-auto">Configure your parameters on the left, click generate, and watch
+          <p class="text-zinc-500 max-w-md mx-auto mb-10">Configure your parameters on the left, click generate, and
+            watch
             Pollinations weave a beautiful storybook using advanced LLMs and Flux imagery.</p>
+
+          <div
+            class="mt-8 p-6 bg-zinc-900/50 border border-zinc-800 rounded-2xl w-full max-w-md flex flex-col sm:flex-row items-center gap-6 text-left relative overflow-hidden group/sample cursor-pointer transition-all hover:border-yellow-500/30 hover:bg-zinc-800/80"
+            onclick="loadSampleBook()">
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent opacity-0 group-hover/sample:opacity-100 transition-opacity">
+            </div>
+            <img src="sample/gelo-storybook/page1.png" alt="Sample Cover"
+              class="w-16 h-24 object-cover rounded-md shadow-lg border border-white/10 group-hover/sample:scale-105 transition-transform">
+            <div>
+              <div class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-1"><i
+                  class="fa-solid fa-star mr-1"></i> Featured Sample</div>
+              <h4 class="text-zinc-200 font-bold leading-tight book-font italic mb-2">Gelo and the Spell That Kept Him
+                from School</h4>
+              <p class="text-xs text-zinc-500">6 Pages • Whimsical Fairy Tale</p>
+            </div>
+            <div
+              class="ml-auto bg-yellow-500/10 text-yellow-500 w-10 h-10 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.2)] group-hover/sample:bg-yellow-400 group-hover/sample:text-black transition-colors">
+              <i class="fa-solid fa-arrow-right"></i>
+            </div>
+          </div>
         </div>
 
-        <!-- Generating State -->
         <div id="loadingState"
           class="hidden glass-panel rounded-[2rem] h-full min-h-[600px] flex flex-col items-center justify-center p-10">
           <div class="loader mb-6 w-12 h-12 border-4"></div>
           <h3 class="text-2xl font-bold text-yellow-400 mb-2 animate-pulse" id="loadingText">Summoning the Muse...</h3>
           <p class="text-zinc-400 max-w-md mx-auto text-center" id="loadingSubtext">Crafting the narrative structure</p>
 
-          <!-- Progress Track -->
           <div class="w-full max-w-md mt-8 bg-zinc-800 rounded-full h-2 overflow-hidden border border-zinc-700">
             <div id="progressBar"
               class="h-full bg-yellow-400 w-0 transition-all duration-300 shadow-[0_0_10px_rgba(250,204,21,0.8)]"></div>
           </div>
         </div>
 
-        <!-- Book Viewer -->
         <div id="viewer" class="hidden w-full perspective-3000">
           <div class="flex justify-between items-center mb-6">
             <h2 id="bookTitleDisplay" class="text-2xl font-bold text-yellow-300 book-font italic"></h2>
+            <div class="flex gap-2">
+              <button onclick="downloadZip()" id="saveBtn"
+                class="p-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-file-zipper"></i> <span id="saveBtnText">Save ZIP</span>
+              </button>
+            </div>
           </div>
 
           <div class="glass-panel rounded-[2rem] overflow-hidden shadow-2xl relative" style="min-height: 600px;">
             <div id="pageContent" class="absolute inset-0 flex flex-col md:flex-row bg-[#121214]"></div>
 
-            <!-- Navigation overlays -->
             <button onclick="prevPage()"
               class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur border border-white/10 flex items-center justify-center transition-all z-20 text-white shadow-xl group">
               <i class="fa-solid fa-chevron-left group-hover:-translate-x-1 transition-transform"></i>
@@ -240,7 +259,6 @@
               <i class="fa-solid fa-chevron-right group-hover:translate-x-1 transition-transform"></i>
             </button>
 
-            <!-- Page indicator dots -->
             <div id="pageDots"
               class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20 px-4 py-2 rounded-full bg-black/50 backdrop-blur border border-white/5">
             </div>
@@ -250,6 +268,16 @@
       </div>
     </div>
 
+  </div>
+
+  <div id="fullscreenOverlay" class="fullscreen-overlay hidden" onclick="closeFullscreen()">
+    <button onclick="closeFullscreen()"
+      class="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur border border-white/20 flex items-center justify-center text-white text-xl transition-all">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <img id="fullscreenImage" src="" alt="Fullscreen"
+      class="max-w-[95vw] max-h-[95vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+      onclick="event.stopPropagation()">
   </div>
 
   <script src="js/app.js"></script>
